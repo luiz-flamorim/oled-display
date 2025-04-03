@@ -48,6 +48,6 @@ def display_message(message):
 # Example usage
 if __name__ == "__main__":
     print("Displaying message...")
-    display_message("Renata, o chocolate é meu!!!")
+    display_message("Test Message")
     time.sleep(10)
     display_message("")

@@ -31,7 +31,3 @@ def extract_headlines(url):
             headlines.append(text)
 
     return headlines
-
-# headlines = extract_headlines("https://www.bbc.com/news")
-# for line in headlines:
-#     print(line)

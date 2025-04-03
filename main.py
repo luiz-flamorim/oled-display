@@ -3,13 +3,23 @@ from oled_display import display_message
 import time
 
 def main():
-    url = "https://www.bbc.com/news"
-    headlines = extract_headlines(url)
+    urls = [
+        "https://www.bbc.com/news",
+        "https://www.theguardian.com/international",
+        "https://www.reuters.com/",
+    ]
 
-    for headline in headlines:
-        print(f"Showing: {headline}")
-        display_message(headline)
-        time.sleep(5)
+    all_headlines = []
+    for url in urls:
+        print(f"Scraping {url}...")
+        headlines = extract_headlines(url)
+        all_headlines.extend(headlines)
+
+    separator = " ::: " 
+    combined = separator.join(all_headlines)
+
+    print("Displaying combined headlines...")
+    display_message(combined)
 
 if __name__ == "__main__":
     main()

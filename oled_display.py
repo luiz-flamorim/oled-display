@@ -6,6 +6,9 @@ import shutil
 import psutil
 import os
 
+# So main.py can use this new function
+__all__ = ["display_message", "display_scraping_message"]
+
 # Font path map by language
 FONT_PATHS = {
     "en": "fonts/NotoSans-Regular.ttf",
@@ -87,12 +90,7 @@ def display_message(headlines):
 
     total_height = line_height * len(display_lines)
 
-    if total_height <= (height - hud_height):
-        image = Image.new("1", (width, height))
-        draw = ImageDraw.Draw(image)
-
-        draw.rectangle((0, 0, width, hud_height), fill=0)
-
+    def draw_hud(draw):
         uptime = get_uptime_minutes()
         ram = int(psutil.virtual_memory().percent)
         cpu = int(psutil.cpu_percent())
@@ -101,8 +99,17 @@ def display_message(headlines):
         draw.text((1, 0), sys_info, font=hud_font, fill=255)
 
         sd_percent = get_sd_usage_percent()
-        progress_bar = "[" + "█" * 10 + "]"
-        draw.text((1, 10), f"SD {sd_percent}% {progress_bar}", font=hud_font, fill=255)
+        bar_blocks = 40
+        filled = int(ram / 100 * bar_blocks)
+        bar = "[" + ":".join([""] * filled) + "." * (bar_blocks - filled) + "]"
+        draw.text((1, 10), f"SD {sd_percent}% {bar}", font=hud_font, fill=255)
+
+    if total_height <= (height - hud_height):
+        image = Image.new("1", (width, height))
+        draw = ImageDraw.Draw(image)
+
+        draw.rectangle((0, 0, width, hud_height), fill=0)
+        draw_hud(draw)
 
         y = hud_height
         for line in display_lines:
@@ -126,20 +133,7 @@ def display_message(headlines):
             draw = ImageDraw.Draw(frame)
 
             draw.rectangle((0, 0, width, hud_height), fill=0)
-
-            uptime = get_uptime_minutes()
-            ram = int(psutil.virtual_memory().percent)
-            cpu = int(psutil.cpu_percent())
-            up_str = f"{uptime}min" if uptime < 60 else f"{uptime // 60}h"
-            sys_info = f"UP {up_str} | RAM {ram}% | CPU {cpu}%"
-            draw.text((1, 0), sys_info, font=hud_font, fill=255)
-
-            sd_percent = get_sd_usage_percent()
-            progress_ratio = (offset + height) / total_height
-            blocks_total = 10
-            filled_blocks = int(progress_ratio * blocks_total)
-            bar = "[" + "█" * filled_blocks + "░" * (blocks_total - filled_blocks) + "]"
-            draw.text((1, 10), f"SD {sd_percent}% {bar}", font=hud_font, fill=255)
+            draw_hud(draw)
 
             visible_part = scroll_image.crop((0, offset, width, offset + height - hud_height))
             frame.paste(visible_part, (0, hud_height))
@@ -148,3 +142,43 @@ def display_message(headlines):
             time.sleep(0.03)
 
         time.sleep(2)
+
+
+def display_scraping_message():
+    width, height = device.width, device.height
+
+    image = Image.new("1", (width, height))
+    draw = ImageDraw.Draw(image)
+
+    # HUD background
+    draw.rectangle((0, 0, width, 25), fill=0)
+
+    # System info
+    uptime = get_uptime_minutes()
+    ram = int(psutil.virtual_memory().percent)
+    cpu = int(psutil.cpu_percent())
+    up_str = f"{uptime}min" if uptime < 60 else f"{uptime // 60}h"
+    sys_info = f"UP {up_str} | RAM {ram}% | CPU {cpu}%"
+    draw.text((1, 0), sys_info, font=hud_font, fill=255)
+
+    # SD usage and RAM-based bar
+    sd_percent = get_sd_usage_percent()
+
+    bar_blocks = 40
+    filled = int(ram / 100 * bar_blocks)
+    bar = "[" + ":".join([""] * filled) + "." * (bar_blocks - filled) + "]"
+
+    draw.text((1, 10), f"SD {sd_percent}% {bar}", font=hud_font, fill=255)
+
+    # Scraping message
+    message = "::: ##### :::"
+    font = LOADED_FONTS["en"]
+    bbox = draw.textbbox((0, 0), message, font=font)
+    text_width = bbox[2] - bbox[0]
+    text_height = bbox[3] - bbox[1]
+    x = (width - text_width) // 2
+    y = (height - text_height) // 2 + 10
+
+    draw.text((x, y), message, font=font, fill=255)
+
+    device.display(image)

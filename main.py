@@ -1,6 +1,7 @@
 import random
 from scraper import extract_headlines
-from oled_display import display_message
+from oled_display import display_message, display_scraping_message
+
 
 def main():
     sources = [
@@ -33,6 +34,7 @@ def main():
     all_headlines = []
 
     for source in sources:
+        display_scraping_message()
         lang = source["lang"]
         url = source["url"]
         print(f"Scraping {url}...")

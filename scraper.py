@@ -3,6 +3,8 @@ import requests
 
 def extract_headlines(url):
     response = requests.get(url)
+    response.encoding = 'utf-8'  # <- force UTF-8 decoding
+    html = response.text
     soup = BeautifulSoup(response.text, 'html.parser')
 
     candidates = []
@@ -12,7 +14,17 @@ def extract_headlines(url):
         candidates.extend(soup.find_all(tag))
 
     # 2. Try known headline classes
-    for class_name in ['headline', 'entry-title', 'title', 'post-title', 'gs-c-promo-heading__title']:
+    for class_name in [
+                        'headline',
+                        'entry-title',
+                        'title',
+                        'post-title',
+                        'gs-c-promo-heading__title',
+                        'card__title',               # RT
+                        'card__heading',             # RT
+                        'main__feed__title',         # RBC
+                        'main__title',               # RBC
+                       ]:
         candidates.extend(soup.find_all(class_=class_name))
 
     # 3. Extract and clean

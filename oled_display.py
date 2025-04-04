@@ -4,111 +4,133 @@ from PIL import Image, ImageDraw, ImageFont
 import time
 import shutil
 import psutil
+import os
 
-# usage information
+# Font path map by language
+FONT_PATHS = {
+    "en": "fonts/NotoSans-Regular.ttf",
+    "ru": "fonts/NotoSans-C-Regular.ttf",
+    "hi": "fonts/NotoSansDevanagari-Regular.ttf",
+    "ml": "fonts/NotoSansMalayalam-Regular.ttf",
+    "pt": "fonts/NotoSans-Regular.ttf",
+    "fr": "fonts/NotoSans-Regular.ttf",
+    "uk": "fonts/NotoSans-C-Regular.ttf",
+    "ja": "fonts/NotoSansCJKjp-Regular.otf",
+    "zh": "fonts/NotoSansCJK-Regular.ttc",
+    "ko": "fonts/NotoSansCJK-Regular.ttc",
+}
+
+# Validate font paths
+for lang, path in FONT_PATHS.items():
+    if not os.path.exists(path):
+        print(f"[!] Missing font for '{lang}': {path}")
+
+# Load all fonts once
+LOADED_FONTS = {lang: ImageFont.truetype(path, 10) for lang, path in FONT_PATHS.items() if os.path.exists(path)}
+
+# HUD font (separate and smaller)
+HUD_FONT_PATH = "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf"
+hud_font = ImageFont.truetype(HUD_FONT_PATH, 8)
+
+# Display setup
+serial = spi(device=0, port=0, gpio_DC=25, gpio_RST=27)
+device = sh1106(serial)
+
+# System info
 def get_sd_usage_percent():
     total, used, free = shutil.disk_usage("/")
-    percent = int(used / total * 100)
-    return percent
+    return int(used / total * 100)
 
 def get_uptime_minutes():
     uptime_seconds = int(time.time() - psutil.boot_time())
     return uptime_seconds // 60
 
-# Setup display
-serial = spi(device=0, port=0, gpio_DC=25, gpio_RST=27)
-device = sh1106(serial)
+# Wrap text to fit screen
+def wrap_text(line, font, max_width, draw):
+    wrapped = []
+    words = line.split()
+    line_buf = ""
+    for word in words:
+        test_line = line_buf + word + " "
+        bbox = draw.textbbox((0, 0), test_line, font=font)
+        text_width = bbox[2] - bbox[0]
+        if text_width <= max_width:
+            line_buf = test_line
+        else:
+            wrapped.append(line_buf.strip())
+            line_buf = word + " "
+    if line_buf:
+        wrapped.append(line_buf.strip())
+    return wrapped
 
-def wrap_text(message, font, max_width, draw):
-    lines = []
-    for paragraph in message.split("\n"):
-        words = paragraph.split()
-        line = ""
-        for word in words:
-            test_line = line + word + " "
-            bbox = draw.textbbox((0, 0), test_line, font=font)
-            text_width = bbox[2] - bbox[0]
-            if text_width <= max_width:
-                line = test_line
-            else:
-                lines.append(line.strip())
-                line = word + " "
-        if line:
-            lines.append(line.strip())
-    return lines
-
-def display_message(message):
-    font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"
-    font = ImageFont.truetype(font_path, 10)
-    hud_font = ImageFont.truetype(font_path, 8)  # smaller font for HUD
-
+def display_message(headlines):
     width, height = device.width, device.height
-    hud_height = 25  # smaller now that font is smaller
+    hud_height = 25
 
-    linespace = font.getbbox("A")[3] + 2
-
-    # Wrap text
+    # Temporary canvas for measuring
     temp_image = Image.new("1", (width, height))
     temp_draw = ImageDraw.Draw(temp_image)
-    lines = wrap_text(message, font, width, temp_draw)
-    line_height = linespace
-    total_height = line_height * len(lines)
+
+    display_lines = []
+    line_height = 0
+
+    for item in headlines:
+        lang = item.get("lang", "en")
+        text = item.get("text", "")
+        font = LOADED_FONTS.get(lang, LOADED_FONTS["en"])
+
+        lines = wrap_text(text, font, width, temp_draw)
+        for l in lines:
+            display_lines.append({ "text": l, "font": font })
+            if line_height == 0:
+                line_height = font.getbbox("A")[3] + 2
+
+    total_height = line_height * len(display_lines)
 
     if total_height <= (height - hud_height):
-        # Static message (no scroll needed)
         image = Image.new("1", (width, height))
         draw = ImageDraw.Draw(image)
 
-        # HUD background
-        draw.rectangle((0, 0, width, hud_height), outline=0, fill=0)
+        draw.rectangle((0, 0, width, hud_height), fill=0)
 
-        # HUD content
         uptime = get_uptime_minutes()
         ram = int(psutil.virtual_memory().percent)
         cpu = int(psutil.cpu_percent())
         up_str = f"{uptime}min" if uptime < 60 else f"{uptime // 60}h"
-
-        # Line 1
         sys_info = f"UP {up_str} | RAM {ram}% | CPU {cpu}%"
         draw.text((1, 0), sys_info, font=hud_font, fill=255)
 
-        # Line 2
         sd_percent = get_sd_usage_percent()
-        progress_bar = "[" + "█" * 10 + "]"  # fully filled since no scrolling
+        progress_bar = "[" + "█" * 10 + "]"
         draw.text((1, 10), f"SD {sd_percent}% {progress_bar}", font=hud_font, fill=255)
 
-        # Message
         y = hud_height
-        for line in lines:
-            draw.text((0, y), line, font=font, fill=255)
+        for line in display_lines:
+            draw.text((0, y), line["text"], font=line["font"], fill=255)
             y += line_height
 
         device.display(image)
         time.sleep(5)
 
     else:
-        # Scroll needed
         scroll_image = Image.new("1", (width, total_height))
         scroll_draw = ImageDraw.Draw(scroll_image)
 
         y = 0
-        for line in lines:
-            scroll_draw.text((0, y), line, font=font, fill=255)
+        for line in display_lines:
+            scroll_draw.text((0, y), line["text"], font=line["font"], fill=255)
             y += line_height
 
         for offset in range(0, total_height - (height - hud_height) + 1):
             frame = Image.new("1", (width, height))
             draw = ImageDraw.Draw(frame)
 
-            # HUD background
-            draw.rectangle((0, 0, width, hud_height), outline=0, fill=0)
+            draw.rectangle((0, 0, width, hud_height), fill=0)
 
-            # HUD info
             uptime = get_uptime_minutes()
             ram = int(psutil.virtual_memory().percent)
             cpu = int(psutil.cpu_percent())
             up_str = f"{uptime}min" if uptime < 60 else f"{uptime // 60}h"
-
             sys_info = f"UP {up_str} | RAM {ram}% | CPU {cpu}%"
             draw.text((1, 0), sys_info, font=hud_font, fill=255)
 
@@ -117,10 +139,8 @@ def display_message(message):
             blocks_total = 10
             filled_blocks = int(progress_ratio * blocks_total)
             bar = "[" + "█" * filled_blocks + "░" * (blocks_total - filled_blocks) + "]"
-
             draw.text((1, 10), f"SD {sd_percent}% {bar}", font=hud_font, fill=255)
 
-            # Scrollable message
             visible_part = scroll_image.crop((0, offset, width, offset + height - hud_height))
             frame.paste(visible_part, (0, hud_height))
 

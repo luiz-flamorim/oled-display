@@ -2,3 +2,4 @@ venv/
 fonts/
 __pycache__/
 *.pyc
+ping_log.txt

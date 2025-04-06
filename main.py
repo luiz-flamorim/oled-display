@@ -18,7 +18,6 @@ def main():
     ping_thread = threading.Thread(target=ping_loop, daemon=True)
     ping_thread.start()
 
-    # Your original code
     sources = [
         { "lang": "en", "url": "https://www.bbc.com/news" },
         { "lang": "en", "url": "https://www.theguardian.com/international" },
@@ -39,21 +38,29 @@ def main():
 
     all_headlines = []
 
-    for source in sources:
-        display_scraping_message()
-        lang = source["lang"]
-        url = source["url"]
-        print(f"Scraping {url}...")
-        headlines = extract_headlines(url)
-        for h in headlines:
-            all_headlines.append({ "text": h, "lang": lang })
+    try:
+        for source in sources:
+            display_scraping_message()
+            lang = source["lang"]
+            url = source["url"]
+            print(f"Scraping {url}...")
+            headlines = extract_headlines(url)
+            for h in headlines:
+                all_headlines.append({ "text": h, "lang": lang })
 
-    # Shuffle headlines to simulate overload
-    random.shuffle(all_headlines)
+        if not all_headlines:
+            print("[WARN] No headlines collected. Check internet connection or scraper errors.")
 
-    # Infinite loop
-    while True:
-        display_message(all_headlines)
+        # Shuffle headlines to simulate overload
+        random.shuffle(all_headlines)
+
+        # Infinite loop
+        while True:
+            display_message(all_headlines)
+
+    except Exception as e:
+        print(f"[ERROR] Thanatos crashed during scraping or display loop: {e}")
+        display_message([{ "text": "Thanatos failed. Check logs.", "lang": "en" }])
 
 if __name__ == "__main__":
     main()

@@ -1,9 +1,5 @@
+__pycache__/
 venv/
 fonts/
-__pycache__/
+logs/
 *.pyc
-ping_log.txt
-bootlog.txt
-nohup.out
-thanatos-error.log
-thanatos.log

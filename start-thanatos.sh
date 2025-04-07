@@ -1,6 +1,17 @@
 #!/bin/bash
 
-LOGFILE="/home/luizamorim/oled_project/bootlog.txt"
+LOGFILE="/home/luizamorim/oled_project/logs/boot_log.txt"
+MAX_LINES=300
+
+trim_log_file() {
+    if [ -f "$LOGFILE" ]; then
+        lines=$(wc -l < "$LOGFILE")
+        if [ "$lines" -gt "$MAX_LINES" ]; then
+            tail -n "$MAX_LINES" "$LOGFILE" > "${LOGFILE}.tmp" && mv "${LOGFILE}.tmp" "$LOGFILE"
+            echo "[log] Trimmed to last $MAX_LINES lines." >> $LOGFILE
+        fi
+    fi
+}
 
 echo "=== Thanatos boot start === $(date)" >> $LOGFILE
 echo "Waiting for network..." >> $LOGFILE
@@ -15,11 +26,16 @@ done
 
 if ! ping -c 1 google.com &> /dev/null; then
     echo "No network detected. Aborting Thanatos launch." >> $LOGFILE
+    trim_log_file
     exit 1
 fi
 
 echo "Activating virtualenv and launching..." >> $LOGFILE
 source /home/luizamorim/oled_project/venv/bin/activate
-> /home/luizamorim/oled_project/nohup.out
-nohup python3 /home/luizamorim/oled_project/main.py > /home/luizamorim/oled_project/nohup.out 2>&1 &
+
+# Clear old nohup log and launch the script
+> /home/luizamorim/oled_project/logs/nohup.out
+nohup python3 /home/luizamorim/oled_project/main.py > /home/luizamorim/oled_project/logs/nohup.out 2>&1 &
+
 echo "Thanatos launched." >> $LOGFILE
+trim_log_file

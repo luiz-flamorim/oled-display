@@ -13,6 +13,20 @@ trim_log_file() {
     fi
 }
 
+trim_service_log_file() {
+    local logfile=$1
+    local max_lines=500
+
+    if [ -f "$logfile" ]; then
+        local lines
+        lines=$(wc -l < "$logfile")
+        if [ "$lines" -gt "$max_lines" ]; then
+            tail -n "$max_lines" "$logfile" > "${logfile}.tmp" && mv "${logfile}.tmp" "$logfile"
+            echo "[log] Trimmed: $logfile to last $max_lines lines."
+        fi
+    fi
+}
+
 echo "=== Thanatos boot start === $(date)" >> $LOGFILE
 echo "Waiting for network..." >> $LOGFILE
 

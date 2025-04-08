@@ -117,6 +117,8 @@ sources = [
     { "name": "bhaskar", "lang": "hi", "url": "https://www.bhaskar.com/" },
     # { "name": "manorama", "lang": "ml", "url": "https://www.manoramaonline.com/" },
     { "name": "g1", "lang": "pt", "url": "https://g1.globo.com/" },
+    { "name": "g1", "lang": "pt", "url": "https://www.estadao.com.br" },
+    { "name": "g1", "lang": "pt", "url": "https://www.folha.uol.com.br" },
     { "name": "lemonde", "lang": "fr", "url": "https://www.lemonde.fr/" },
     { "name": "pravda", "lang": "uk", "url": "https://www.pravda.com.ua/" },
     { "name": "yna", "lang": "ko", "url": "https://www.yna.co.kr/" }

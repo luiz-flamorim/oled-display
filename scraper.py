@@ -115,7 +115,7 @@ sources = [
     { "name": "rt", "lang": "ru", "url": "https://russian.rt.com/" },
     { "name": "rbc", "lang": "ru", "url": "https://www.rbc.ru/" },
     { "name": "bhaskar", "lang": "hi", "url": "https://www.bhaskar.com/" },
-    { "name": "manorama", "lang": "ml", "url": "https://www.manoramaonline.com/" },
+    # { "name": "manorama", "lang": "ml", "url": "https://www.manoramaonline.com/" },
     { "name": "g1", "lang": "pt", "url": "https://g1.globo.com/" },
     { "name": "lemonde", "lang": "fr", "url": "https://www.lemonde.fr/" },
     { "name": "pravda", "lang": "uk", "url": "https://www.pravda.com.ua/" },

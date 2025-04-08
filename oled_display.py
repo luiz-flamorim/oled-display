@@ -14,7 +14,7 @@ FONT_PATHS = {
     "en": "fonts/NotoSans-Regular.ttf",
     "ru": "fonts/NotoSans-C-Regular.ttf",
     "hi": "fonts/NotoSansDevanagari-Regular.ttf",
-    "ml": "fonts/NotoSansMalayalam-Regular.ttf",
+    # "ml": "fonts/NotoSansMalayalam-Regular.ttf",
     "pt": "fonts/NotoSans-Regular.ttf",
     "fr": "fonts/NotoSans-Regular.ttf",
     "uk": "fonts/NotoSans-C-Regular.ttf",

@@ -65,8 +65,15 @@ def main():
 
     all_headlines = load_headlines()
     if not all_headlines:
-        log_main_event("[WARN] No headlines to display.")
-        all_headlines = [{ "text": "Thanatos found no news.", "lang": "en" }]
+        log_main_event("[INIT] No headlines found, running startup scrape...")
+        display_scraping_message()
+        scrape_random_source()
+        all_headlines = load_headlines()
+
+        if not all_headlines:
+            log_main_event("[INIT] Still no headlines after scrape.")
+            all_headlines = [{ "text": "Thanatos found no news.", "lang": "en" }]
+
 
     random.shuffle(all_headlines)
     last_scrape_time = time.time()

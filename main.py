@@ -33,21 +33,6 @@ def ping_loop():
         log_ping()
         time.sleep(PING_INTERVAL)
 
-# def load_headlines():
-#     today_file = Path(f"news/{datetime.utcnow().strftime('%Y-%m-%d')}.json")
-#     all_headlines = []
-
-#     if today_file.exists():
-#         with open(today_file, 'r', encoding='utf-8') as f:
-#             data = json.load(f)
-#         for source_data in data.get(today_file.stem, {}).values():
-#             for h in source_data.get("headlines", []):
-#                 all_headlines.append({ "text": h["text"], "lang": "en" })
-#     else:
-#         log_main_event("[WARN] No news file found.")
-
-#     return all_headlines
-
 def load_headlines():
     today_file = Path(f"news/{datetime.utcnow().strftime('%Y-%m-%d')}.json")
     all_headlines = []
@@ -66,7 +51,6 @@ def load_headlines():
         log_main_event("[WARN] No news file found.")
 
     return all_headlines
-
 
 def scrape_random_source():
     source = random.choice(sources)
